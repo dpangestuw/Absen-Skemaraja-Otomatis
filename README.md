@@ -4,7 +4,7 @@ Otomatisasi pengisian kehadiran untuk Skemaraja menggunakan Selenium dan Python.
 
 ## Fitur
 
-- Otomatis mengisi form kehadiran di Skemaraja.
+- Otomatis mengisi Absen di Skemaraja pada hari kerja.
 - Mengatur geolokasi custom pada browser.
 - Mengirim notifikasi ke Telegram setelah pengisian berhasil.
 - Penanganan percobaan ulang jika terjadi kegagalan.
@@ -24,8 +24,8 @@ Otomatisasi pengisian kehadiran untuk Skemaraja menggunakan Selenium dan Python.
 1. Clone repositori ini:
 
     ```bash
-    git clone https://github.com/username/skemaraja-attendance-automation.git
-    cd skemaraja-attendance-automation
+    git clone https://github.com/dpangestuw/Absen-Skemaraja.git
+    cd Absen-Skemeraja
     ```
 
 2. Instal dependensi:
@@ -37,8 +37,8 @@ Otomatisasi pengisian kehadiran untuk Skemaraja menggunakan Selenium dan Python.
 3. Buat file `config.csv` di direktori proyek dengan format berikut:
 
     ```csv
-    NIP,password,name,telegram_chat_id,start_time
-    12345678,password123,John Doe,123456789,08:00
+    NIP,password,name,telegram_chat_id,pagi,siang,sore
+    12345678,password123,John Doe,123456789,07:00,12:00,16:30
     ```
 
 ## Penggunaan
@@ -46,7 +46,16 @@ Otomatisasi pengisian kehadiran untuk Skemaraja menggunakan Selenium dan Python.
 1. Jalankan script dengan perintah berikut:
 
     ```bash
-    python main.py
+    python pagi.py
+    ```
+    ```bash
+    python seninpagi.py
+    ```
+    ```bash
+    python siang.py
+    ```
+    ```bash
+    python sore.py
     ```
 
 2. Script akan memulai proses pengisian form kehadiran dan mengirimkan notifikasi ke Telegram setelah berhasil.
@@ -59,7 +68,7 @@ Script ini dapat dikonfigurasi melalui file `config.csv`:
 - **password**: Kata sandi untuk login.
 - **name**: Nama pengguna.
 - **telegram_chat_id**: ID chat Telegram untuk menerima notifikasi.
-- **start_time**: Waktu mulai untuk menjalankan script (format 24 jam, misal `08:00`).
+- **start_time**: Waktu mulai untuk menjalankan script (format 24 jam, misal `07:00`).
 
 ## Troubleshooting
 
