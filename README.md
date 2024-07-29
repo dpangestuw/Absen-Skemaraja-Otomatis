@@ -60,6 +60,14 @@ Otomatisasi pengisian kehadiran untuk Skemaraja menggunakan Selenium dan Python.
 
 2. Script akan memulai proses pengisian form kehadiran dan mengirimkan notifikasi ke Telegram setelah berhasil.
 
+## Cara Mendapatkan Telegram Chat ID
+
+### Menggunakan Bot @userinfobot
+
+1. Buka Telegram dan cari bot `@userinfobot`.
+2. Kirim pesan `/start` ke bot `@userinfobot`.
+3. Bot ini akan membalas dengan informasi yang berisi `chat_id`. Gunakan `chat_id` ini untuk mengirim pesan ke akun Anda sendiri.
+
 ## Konfigurasi
 
 Script ini dapat dikonfigurasi melalui file `config.csv`:
