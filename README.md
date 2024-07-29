@@ -64,6 +64,6 @@ Script ini dapat dikonfigurasi melalui file `config.csv`:
 ## Troubleshooting
 
 - Pastikan versi Chrome dan ChromeDriver kompatibel.
-- Pastikan ID chat Telegram sudah benar.
+- Pastikan Path ChromeDriver pada C:\chromedriver.exe
 - Periksa kembali format `config.csv`.
 
