@@ -37,17 +37,56 @@ def set_geolocation(driver, latitude, longitude):
     })
 
 # Function to wait until the page is fully loaded
-def wait_for_full_load(driver, timeout=10):
+def wait_for_full_load(driver, timeout=3):
     try:
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="theForm"]/div/p[1]/input'))
         )
     except Exception as e:
-        print(f"Page not fully loaded, refreshing... Exception: {e}")
+        print(f"Page not fully loaded, refreshing...")
         driver.refresh()
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="theForm"]/div/p[1]/input'))
         )
+
+# Function perjalanan
+def wait_for_perjalanan(driver, timeout=3):
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr/td[2]/input[6]'))
+        )
+    except Exception as e:
+        print(f"Page not fully loaded, refreshing...")
+        driver.refresh()
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr/td[2]/input[6]'))
+        )
+
+# Function kesehatan
+def wait_for_kesehatan(driver, timeout=3):
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input'))
+        )
+    except Exception as e:
+        print(f"Page not fully loaded, refreshing...")
+        driver.refresh()
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input'))
+        )        
+
+# Function to wait until the next page is fully loaded
+def wait_for_next_page_load(driver, timeout=3):
+   try:
+       WebDriverWait(driver, timeout).until(
+           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-primary.btn-block'))
+       )
+   except Exception as e:
+       print(f"Next page not fully loaded, refreshing...")
+       driver.refresh()
+       WebDriverWait(driver, timeout).until(
+           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-primary.btn-block'))
+       )
 
 # Function to set browser zoom level
 def set_browser_zoom(driver, zoom_level):
@@ -62,7 +101,7 @@ def scroll_to_bottom(driver):
     last_height = driver.execute_script("return document.body.scrollHeight")
     while True:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)  # wait for the page to load
+        time.sleep(1)  # wait for the page to load
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
             break
@@ -78,12 +117,12 @@ def submit_attendance(entry):
     # Hardcoded values
     wfh_status = "Work From Office"
     telegram_bot_token = "7482058034:AAGnXDqvNVOZ5gle4Jw0YOMjG6JD4KnP1KI"  # Replace with your actual Telegram bot token
-    latitude = -6.9757197  # Example latitude, replace with the actual value
-    longitude = 107.6455423  # Example longitude, replace with the actual value
+    latitude = -6.975933  # Example latitude, replace with the actual value
+    longitude = 107.646185  # Example longitude, replace with the actual value
     suhu = "36"  # Example temperature, replace with the actual value
 
     max_retries = 3
-    retry_delay = 5  # seconds
+    retry_delay = 3  # seconds
 
     for attempt in range(max_retries):
         driver = None
@@ -99,8 +138,6 @@ def submit_attendance(entry):
             set_geolocation(driver, latitude, longitude)
             driver.get("https://skemaraja.dephub.go.id/")
             wait_for_full_load(driver)
-
-            time.sleep(2)
 
             # Input NIP
             nip_field = driver.find_element(By.XPATH, '//*[@id="theForm"]/div/p[1]/input')
@@ -131,61 +168,81 @@ def submit_attendance(entry):
             submit_button = driver.find_element(By.XPATH, '//*[@id="btnSubmit"]')
             submit_button.click()
 
-            time.sleep(2)
+            time.sleep(1)
 
             # Wait for the next page to be fully loaded after form submission
             driver.get("https://skemaraja.dephub.go.id/")
-
-            time.sleep(2)
-
-            scroll_down(driver)
-
-            # Additional form inputs
-            suhu_field = driver.find_element(By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input')
-            suhu_field.send_keys(suhu)
-
-            scroll_down(driver)
-
-            health_conditions_buttons = [
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[2]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[3]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[4]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[5]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[6]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[7]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[8]/td[4]/input',
-                '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[9]/td[4]/input'
-            ]
-
-            for button_xpath in health_conditions_buttons:
-                button = driver.find_element(By.XPATH, button_xpath)
-                driver.execute_script("arguments[0].click();", button)  # Click the button using JavaScript
+            time.sleep(1)
 
             scroll_to_bottom(driver)
 
-            time.sleep(2)
+            try:
+                # Attempt to submit form perjalanan
+                wait_for_perjalanan(driver)
+                time.sleep(1)
+                jalan_button = driver.find_element(By.CLASS_NAME, 'btn.btn-primary')
+                jalan_button.click()
+                time.sleep(1)
+                scroll_down(driver)
 
-            # Submit additional health info
-            additional_submit_button = driver.find_element(By.CLASS_NAME, 'btn.btn-primary')
-            additional_submit_button.click()
+            except Exception as e:
+                print(f"Form perjalanan tidak ditemukan. Melanjutkan ke langkah berikutnya...")
 
-            time.sleep(2)
+            try:
+                # Attempt to fill additional form inputs
+                wait_for_kesehatan(driver)
+                time.sleep(1)
+                suhu_field = driver.find_element(By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input')
+                suhu_field.send_keys(suhu)
+
+                scroll_down(driver)
+
+                health_conditions_buttons = [
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[2]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[3]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[4]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[5]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[6]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[7]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[8]/td[4]/input',
+                    '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[9]/td[4]/input'
+                ]
+
+                for button_xpath in health_conditions_buttons:
+                    button = driver.find_element(By.XPATH, button_xpath)
+                    driver.execute_script("arguments[0].click();", button)  # Click the button using JavaScript
+
+                scroll_to_bottom(driver)
+                time.sleep(1)
+
+                # Attempt to submit additional health info
+                additional_submit_button = driver.find_element(By.CLASS_NAME, 'btn.btn-primary')
+                additional_submit_button.click()
+
+            except Exception as e:
+                print(f"Input tambahan tidak ditemukan. Melanjutkan ke langkah berikutnya...")
+
+            time.sleep(1)
+
+            # Wait for the next page to be fully loaded after form submission
+            wait_for_next_page_load(driver)
+            time.sleep(1)
 
             # Send Telegram notification without current time
-            send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen Pagi bos {name} telah dilaksanakan.")
-            print(f"Absen Pagi bos {name} telah dilaksanakan.")
+            send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen bos {name} telah dilaksanakan.")
+            print(f"Absen bos {name} telah dilaksanakan.")
 
             # Open Skemaraja login page again
             driver.get("https://skemaraja.dephub.go.id/")
             break  # Exit the loop if submission is successful
         except Exception as e:
             if attempt < max_retries - 1:
-                print(f"Attempt {attempt + 1} failed for {name}: {e}. Retrying in {retry_delay} seconds...")
+                print(f"Attempt {attempt + 1} failed for {name}. Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
             else:
-                error_message = f"Attendance submission failed for {name} after {max_retries} attempts: {e}"
-                send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen Pagi bos {name} Gagal dilaksanakan.")
+                error_message = f"Attendance submission failed for {name} after {max_retries}"
+                send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen bos {name} Gagal dilaksanakan.")
                 print(error_message)
         finally:
             if driver:
@@ -193,11 +250,17 @@ def submit_attendance(entry):
 
 # Function to process all entries
 def process_all_entries():
-    delay_between_entries = 10  # seconds
+    global config_list  # Use the global config_list to update it
+    delay_between_entries = 5  # seconds
+    
+    # Reload the config list
+    config_list = read_config('config.csv')
+    
     for entry in config_list:
         print(f"Processing entry for {entry['name']}")
         submit_attendance(entry)
         time.sleep(delay_between_entries)  # Delay between each submission
+
 # Function to check if the current time is within the specified range
 def is_time_in_range(start_time, end_time):
     now = datetime.now().strftime("%H:%M")
@@ -231,15 +294,18 @@ def get_next_run_time(start_time, allowed_days):
     return next_start
 
 # Function to print and update the countdown
-def print_countdown(start_time, allowed_days):
-    next_run_time = get_next_run_time(start_time, allowed_days)
+def print_countdown(start_times, allowed_days):
+    next_run_times = [get_next_run_time(start_time, allowed_days) for start_time in start_times]
     while True:
         now = datetime.now()
+        # Cari waktu berikutnya yang paling dekat
+        next_run_time = min(next_run_times)
         time_remaining = next_run_time - now
         if time_remaining.total_seconds() <= 0:
             print(f"Proses Absen BOS at {now.strftime('%Y-%m-%d %H:%M:%S')}")
             process_all_entries()
-            next_run_time = get_next_run_time(start_time, allowed_days)
+            # Perbarui waktu berikutnya setelah proses berjalan
+            next_run_times = [get_next_run_time(start_time, allowed_days) for start_time in start_times]
         else:
             countdown_str = f"Absen Selanjutnya pada {next_run_time.strftime('%Y-%m-%d %H:%M:%S')}, Countdown: {str(time_remaining).split('.')[0]}"
             print(f"\r{countdown_str}", end="")
@@ -247,10 +313,11 @@ def print_countdown(start_time, allowed_days):
 
 # Function to run the scheduling and processing
 def run_scheduling():
-    start_time = config_list[0]['pagi']  # Assuming all entries have the same start time
-    allowed_days = [1, 2, 3, 4]  # Monday, Wednesday, Friday (0 = Monday, 6 = Sunday)
-    print_countdown(start_time, allowed_days)
+    start_times = ['07:00', '12:00', '16:30']  # Daftar waktu mulai
+    allowed_days = [0, 1, 2, 3, 4]  # Misalnya: Senin, Rabu, Jumat (0 = Senin, 6 = Minggu)
+    print_countdown(start_times, allowed_days)
 
 if __name__ == "__main__":
+    # Read initial configuration
+    config_list = read_config('config.csv')
     run_scheduling()
-
