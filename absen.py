@@ -116,9 +116,9 @@ def submit_attendance(entry):
 
     # Hardcoded values
     wfh_status = "Work From Office"
-    telegram_bot_token = "7482058034:AAGnXDqvNVOZ5gle4Jw0YOMjG6JD4KnP1KI"  # Replace with your actual Telegram bot token
-    latitude = -6.975933  # Example latitude, replace with the actual value
-    longitude = 107.646185  # Example longitude, replace with the actual value
+    telegram_bot_token = "TELEGRAM_BOT_TOKEN"  # Replace with your actual Telegram bot token
+    latitude = -6.xxxx  # Example latitude, replace with the actual value
+    longitude = 107.xxxx  # Example longitude, replace with the actual value
     suhu = "36"  # Example temperature, replace with the actual value
 
     max_retries = 3
