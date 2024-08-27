@@ -23,8 +23,8 @@ Absensi Skemaraja secara otomatis menggunakan Selenium dan Python. Script ini da
 1. Clone repositori ini:
 
     ```bash
-    git clone https://github.com/dpangestuw/Absen-Skemaraja.git
-    cd Absen-Skemaraja
+    git clone https://github.com/dpangestuw/Absen-Skemaraja-Otomatis.git
+    cd Absen-Skemaraja-Otomatis
     ```
 
 2. Instal dependensi:
