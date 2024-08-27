@@ -24,7 +24,7 @@ Absensi Skemaraja secara otomatis menggunakan Selenium dan Python. Script ini da
 
     ```bash
     git clone https://github.com/dpangestuw/Absen-Skemaraja.git
-    cd Absen-Skemeraja
+    cd Absen-Skemaraja
     ```
 
 2. Instal dependensi:
