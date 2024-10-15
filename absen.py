@@ -1,6 +1,7 @@
 import time
 import requests
 import csv
+import json
 from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -12,14 +13,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Read the configuration file
 def read_config(file_path):
-    config_list = []
     with open(file_path, mode='r') as infile:
-        reader = csv.DictReader(infile)
-        for row in reader:
-            config_list.append(row)
-    return config_list
-
-config_list = read_config('config.csv')
+        config = json.load(infile)
+    return config
 
 # Function to send Telegram notification
 def send_telegram_message(telegram_bot_token, telegram_chat_id, message):
@@ -27,6 +23,16 @@ def send_telegram_message(telegram_bot_token, telegram_chat_id, message):
     data = {"chat_id": telegram_chat_id, "text": message}
     response = requests.post(url, data=data)
     return response.json()
+
+# Fungsi cek waktu
+def get_part_of_day():
+    current_hour = datetime.now().hour
+    if 5 <= current_hour < 12:
+        return "Pagi"
+    elif 12 <= current_hour < 15:
+        return "Siang"
+    else:
+        return "Sore"
 
 # Function to set geolocation
 def set_geolocation(driver, latitude, longitude):
@@ -37,66 +43,58 @@ def set_geolocation(driver, latitude, longitude):
     })
 
 # Function to wait until the page is fully loaded
-def wait_for_full_load(driver, timeout=3):
+def wait_for_full_load(driver, timeout=2):
     try:
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="theForm"]/div/p[1]/input'))
         )
     except Exception as e:
-        print(f"Page not fully loaded, refreshing...")
         driver.refresh()
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="theForm"]/div/p[1]/input'))
         )
 
 # Function perjalanan
-def wait_for_perjalanan(driver, timeout=3):
+def wait_for_perjalanan(driver, timeout=2):
     try:
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '/html/body/div/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr/td[2]/input[6]'))
         )
     except Exception as e:
-        print(f"Page not fully loaded, refreshing...")
         driver.refresh()
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '/html/body/div/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr/td[2]/input[6]'))
         )
 
 # Function kesehatan
-def wait_for_kesehatan(driver, timeout=3):
+def wait_for_kesehatan(driver, timeout=2):
     try:
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input'))
         )
     except Exception as e:
-        print(f"Page not fully loaded, refreshing...")
         driver.refresh()
         WebDriverWait(driver, timeout).until(
             EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div[2]/div/div[2]/div/form/div/div[2]/div/div/table/tbody/tr[1]/td[2]/input'))
         )        
 
 # Function to wait until the next page is fully loaded
-def wait_for_next_page_load(driver, timeout=3):
+def wait_for_next_page_load(driver, timeout=2):
    try:
        WebDriverWait(driver, timeout).until(
-           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-primary.btn-block'))
+           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-warning.btn-block'))
        )
    except Exception as e:
-       print(f"Next page not fully loaded, refreshing...")
        driver.refresh()
        WebDriverWait(driver, timeout).until(
-           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-primary.btn-block'))
+           EC.presence_of_element_located((By.CLASS_NAME, 'btn.btn-warning.btn-block'))
        )
-
-# Function to set browser zoom level
-def set_browser_zoom(driver, zoom_level):
-    driver.execute_script(f"document.body.style.zoom='{zoom_level}%'")
 
 # Function to scroll down the page
 def scroll_down(driver):
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-# Function to scroll down the page
+# Function to scroll to the bottom of the page
 def scroll_to_bottom(driver):
     last_height = driver.execute_script("return document.body.scrollHeight")
     while True:
@@ -107,6 +105,19 @@ def scroll_to_bottom(driver):
             break
         last_height = new_height
 
+# Function to check if today is a national holiday using DayOffAPI
+def is_national_holiday():
+    today = datetime.now().strftime("%Y-%m-%d")
+    url = f"https://dayoffapi.vercel.app/api"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        holidays = response.json()
+        for holiday in holidays:
+            if holiday['tanggal'] == today and holiday['keterangan']:
+                return True
+    return False
+
 # Function to perform the attendance submission
 def submit_attendance(entry):
     NIP = entry['NIP']
@@ -114,23 +125,29 @@ def submit_attendance(entry):
     name = entry['name']
     telegram_chat_id = entry['telegram_chat_id']
 
-    # Hardcoded values
-    wfh_status = "Work From Office"
-    telegram_bot_token = "TELEGRAM_BOT_TOKEN"  # Replace with your actual Telegram bot token
-    latitude = -6.xxxx  # Example latitude, replace with the actual value
-    longitude = 107.xxxx  # Example longitude, replace with the actual value
-    suhu = "36"  # Example temperature, replace with the actual value
+    # Baca konfigurasi dari file JSON
+    config = read_config('config.json')
+    telegram_bot_token = config['telegram_bot_token']
+    latitude = config['latitude']
+    longitude = config['longitude']
+    suhu = config['suhu']
 
     max_retries = 3
-    retry_delay = 3  # seconds
+    retry_delay = 2  # seconds
+
+    if is_national_holiday():
+        print(f"Today is a national holiday. Skipping attendance for {name}.")
+        return
 
     for attempt in range(max_retries):
         driver = None
         try:
             # Setup Chrome driver with custom geolocation
             chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
             chrome_options.add_experimental_option("prefs", {"profile.default_content_setting_values.geolocation": 1})
-            service = Service(executable_path="C:\chromedriver.exe")  # Ensure this path is correct
+            service = Service(executable_path="/root/absen/chromedriver")  # Ensure this path is correct
             driver = webdriver.Chrome(service=service, options=chrome_options)
             driver.maximize_window()  # Maximize the browser window
 
@@ -153,7 +170,7 @@ def submit_attendance(entry):
 
             # Select WFH/WFO status
             status_dropdown = Select(driver.find_element(By.XPATH, '//*[@id="theForm"]/div/p[3]/select'))
-            status_dropdown.select_by_visible_text(wfh_status)
+            status_dropdown.select_by_visible_text("Work From Office")
 
             time.sleep(1)
 
@@ -230,94 +247,30 @@ def submit_attendance(entry):
             time.sleep(1)
 
             # Send Telegram notification without current time
-            send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen bos {name} telah dilaksanakan.")
-            print(f"Absen bos {name} telah dilaksanakan.")
+            part_of_day = get_part_of_day()
+            message = f"Absen {part_of_day} {name} telah dilaksanakan."
+            send_telegram_message(telegram_bot_token, telegram_chat_id, message)
+            print(message)
 
             # Open Skemaraja login page again
             driver.get("https://skemaraja.dephub.go.id/")
+            time.sleep(1)
             break  # Exit the loop if submission is successful
         except Exception as e:
             if attempt < max_retries - 1:
-                print(f"Attempt {attempt + 1} failed for {name}. Retrying in {retry_delay} seconds...")
+                print(f"Attempt {attempt + 1} failed for {name}. Retrying in {retry_delay} seconds...: {e}")
                 time.sleep(retry_delay)
             else:
                 error_message = f"Attendance submission failed for {name} after {max_retries}"
-                send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen bos {name} Gagal dilaksanakan.")
+                send_telegram_message(telegram_bot_token, telegram_chat_id, f"Absen {name} Gagal dilaksanakan.")
                 print(error_message)
         finally:
             if driver:
                 driver.quit()
 
-# Function to process all entries
-def process_all_entries():
-    global config_list  # Use the global config_list to update it
-    delay_between_entries = 5  # seconds
-    
-    # Reload the config list
-    config_list = read_config('config.csv')
-    
-    for entry in config_list:
-        print(f"Processing entry for {entry['name']}")
-        submit_attendance(entry)
-        time.sleep(delay_between_entries)  # Delay between each submission
-
-# Function to check if the current time is within the specified range
-def is_time_in_range(start_time, end_time):
-    now = datetime.now().strftime("%H:%M")
-    return start_time <= now <= end_time
-
-# Function to check if today is one of the specified days to run
-def is_allowed_day(allowed_days):
-    now = datetime.now()
-    return now.weekday() in allowed_days
-
-# Function to get the next scheduled run time, adjusted for allowed days
-def get_next_run_time(start_time, allowed_days):
-    now = datetime.now()
-    start_time_time = datetime.strptime(start_time, "%H:%M").time()
-
-    today_start = datetime.combine(now.date(), start_time_time)
-    
-    # Find the next allowed day
-    days_ahead = 0
-    while (now + timedelta(days=days_ahead)).weekday() not in allowed_days:
-        days_ahead += 1
-    
-    next_start = today_start + timedelta(days=days_ahead)
-    
-    if now > today_start and days_ahead == 0:
-        days_ahead = 1
-        while (now + timedelta(days=days_ahead)).weekday() not in allowed_days:
-            days_ahead += 1
-        next_start = today_start + timedelta(days=days_ahead)
-
-    return next_start
-
-# Function to print and update the countdown
-def print_countdown(start_times, allowed_days):
-    next_run_times = [get_next_run_time(start_time, allowed_days) for start_time in start_times]
-    while True:
-        now = datetime.now()
-        # Cari waktu berikutnya yang paling dekat
-        next_run_time = min(next_run_times)
-        time_remaining = next_run_time - now
-        if time_remaining.total_seconds() <= 0:
-            print(f"Proses Absen BOS at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-            process_all_entries()
-            # Perbarui waktu berikutnya setelah proses berjalan
-            next_run_times = [get_next_run_time(start_time, allowed_days) for start_time in start_times]
-        else:
-            countdown_str = f"Absen Selanjutnya pada {next_run_time.strftime('%Y-%m-%d %H:%M:%S')}, Countdown: {str(time_remaining).split('.')[0]}"
-            print(f"\r{countdown_str}", end="")
-        time.sleep(1)  # Update every second
-
-# Function to run the scheduling and processing
-def run_scheduling():
-    start_times = ['07:00', '12:00', '16:30']  # Daftar waktu mulai
-    allowed_days = [0, 1, 2, 3, 4]  # Misalnya: Senin, Rabu, Jumat (0 = Senin, 6 = Minggu)
-    print_countdown(start_times, allowed_days)
-
+# Main program loop
 if __name__ == "__main__":
-    # Read initial configuration
-    config_list = read_config('config.csv')
-    run_scheduling()
+    with open('data.csv', mode='r') as infile:
+        reader = csv.DictReader(infile)
+        for entry in reader:
+            submit_attendance(entry)
